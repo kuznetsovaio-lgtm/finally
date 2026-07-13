@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: finally_test_app
+    ports:
+      - '8000:8000'
+    environment:
+      - LLM_MOCK=true
+      - MASSIVE_API_KEY=
+    env_file:
+      - ../.env
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/health']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - finally_test_db:/app/db
+    networks:
+      - finally-test
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.48.0-jammy
+    container_name: finally_test_playwright
+    working_dir: /app
+    entrypoint: ['npx', 'playwright', 'test', '--reporter=line']
+    environment:
+      - LLM_MOCK=true
+    volumes:
+      - ..:/app
+    depends_on:
+      app:
+        condition: service_healthy
+    network_mode: service:app
+
+networks:
+  finally-test:
+    name: finally-test
+
+volumes:
+  finally_test_db:
