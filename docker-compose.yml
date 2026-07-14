@@ -1,0 +1,23 @@
+version: '3.9'
+
+services:
+  finally:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finally_app
+    ports:
+      - '8000:8000'
+    env_file:
+      - .env
+    volumes:
+      - finally-data:/app/db
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8000/api/health']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  finally-data:
